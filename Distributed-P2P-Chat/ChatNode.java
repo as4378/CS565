@@ -4,7 +4,6 @@ public class ChatNode {
 	public static String myId = "";
 	
 	public static void main(String[] args) {
-		System.out.println(args[0]);
 		if(args[0].contentEquals("0")) {
 			myId = "0";
 			myPort = "3000";
@@ -17,7 +16,6 @@ public class ChatNode {
 			myId = "2";
 			myPort = "3002";
 		}
-		System.out.println(ChatNode.myPort);
 		Thread server = new Thread(new Server());
 		server.start();
 		Thread client = new Thread(new Client());

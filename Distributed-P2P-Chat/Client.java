@@ -7,7 +7,7 @@ public class Client implements Runnable {
 	
     private static ArrayList<String> ports = new ArrayList<String>(){{add("3000"); add("3001"); add("3002");}};
 	
-	public boolean Connect(int port, String action, String message) {
+	public boolean Connect(int port, String action) {
 		Socket newSocket = null;
 		DataOutputStream outNew = null;
 		BufferedReader servInpNew = null;
@@ -19,17 +19,18 @@ public class Client implements Runnable {
 				String toSend = ChatNode.myId + "#Join";
 				outNew.writeBytes(toSend + "\n");
 				String response = servInpNew.readLine();
-				System.out.println(response);
 				String[] parts = response.split("#");
 				ChatNode.succPort = parts[2];
 			}
+			if(action.contentEquals("Leave")){
+				String toSend = ChatNode.myId + "#Leave#" + ChatNode.succPort;
+				outNew.writeBytes(toSend + "\n");
+			}
 		}
 		catch(UnknownHostException e) {
-			System.out.println(e);
 			return false;
 		}
 		catch(IOException e) {
-			System.out.println(e);
 			return false;
 		}
 		try {
@@ -38,17 +39,15 @@ public class Client implements Runnable {
 			newSocket.close();
 		}
 		catch(IOException e) {
-			System.out.println(e);
 			return false;
 		}
 		return true;
 	}
 	
 	public boolean Join() {
-		System.out.println(ChatNode.myPort);
 		for(String p: ports) {
 			if(p != ChatNode.myPort) {
-				if(Connect(Integer.parseInt(p), "Join", "")) {
+				if(Connect(Integer.parseInt(p), "Join")) {
 					return true;
 				}
 			}
@@ -66,7 +65,6 @@ public class Client implements Runnable {
 	}
 	
 	public void Forward(String message) {
-		System.out.println(ChatNode.myPort);
 		try {
 			String toSend = ChatNode.myId + "#Broad#" + message;
 			if(!ChatNode.succPort.contentEquals("")){
@@ -86,22 +84,31 @@ public class Client implements Runnable {
 		}
 	}
 	
+	public void JoinRing() {
+		if(!Join()) {
+			System.out.println("You're the first one here");
+		}
+		else {
+			System.out.println("Joined the chat with other guests");
+			Forward("Node " + ChatNode.myId + " has joined the chat");
+		}
+	}
 	public void run() {
+		JoinRing();
 		this.inp = new BufferedReader(new InputStreamReader(System.in));
 		String line = "";
-		while(!line.contentEquals("quit")) {
+		while(true) {
 			try {
 				line = inp.readLine();
-				if(line.contentEquals("Join")){
-					if(!Join()) {
-						System.out.println("You're the first one here");
-					}
-					else {
-						System.out.println("Joined the chat with other guests");
-					}
+				if(line.contentEquals("Leave")){
+					Connect(Integer.parseInt(ChatNode.succPort), "Leave");
+					break;
 				}
-				else if(!line.contentEquals("quit")) {
-					Forward(line);
+				else if(line.contentEquals("config")) {
+					System.out.println(ChatNode.succPort);
+				}
+				else {
+					Forward("Node " + ChatNode.myId + ": " + line);
 				}		
 			}
 			catch(IOException e) {

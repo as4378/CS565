@@ -37,7 +37,7 @@ public class Server implements Runnable{
 	      while(true) {
 	    	  //variable for holding client socket
 		      Socket clientSocket = null;
-		      System.out.println("Listening for connections...");
+		      //System.out.println("Listening for connections...");
 		      
 		      //try accepting the connection from client 
 		      //if fails then print appropriate message on terminal
@@ -48,13 +48,10 @@ public class Server implements Runnable{
 		    	  System.out.println("Accept failed");
 		      }
 		      
-		      //print an informative message
-		      System.out.println("Connection successful");
-		      System.out.println("Listening for input...");
 		      
 		      try {
 		    	  //create a variable to reference client output stream
-		    	  PrintStream toClient = new PrintStream(clientSocket.getOutputStream());
+		          PrintStream toClient = new PrintStream(clientSocket.getOutputStream());
 
 		    	  //create a variable to reference client input stream
 		    	  BufferedReader fromClient = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
@@ -63,7 +60,7 @@ public class Server implements Runnable{
 		    	  String line = "";
 
 	    		  line = fromClient.readLine();
-	    		  System.out.println("Server: " + line);
+	    		  //System.out.println("Server: " + line);
 	    		  String[] parts = line.split("#");
 	    		  
 	    		  
@@ -79,6 +76,18 @@ public class Server implements Runnable{
 	    		  if(parts[1].contentEquals("UpdSucc")) {
 	    			  ChatNode.succPort = parts[2];
 	    		  }
+	    		  if(parts[1].contentEquals("Leave")) {
+	    			  if(ChatNode.succPort.contentEquals("300" + parts[0])) {
+	    				  Forward(ChatNode.myId + "#Close");
+	    				  ChatNode.succPort = !parts[2].contentEquals(ChatNode.succPort) ? parts[2] : "";
+	    			  }
+	    			  else {
+	    				  if(parts[0] != ChatNode.myId) {
+	    					  Forward(line);
+	    				  }
+	    			  }
+	    			  System.out.println("Node " + parts[0] + " has left the chat");
+	    		  }
 		    	  if(parts[1].contentEquals("Broad") && !parts[0].contentEquals(ChatNode.myId)) {
 		    		  System.out.println(parts[2]);
 		    		  Forward(line);
@@ -89,10 +98,20 @@ public class Server implements Runnable{
 		    	  toClient.close();
 		    	  fromClient.close();
 		    	  clientSocket.close();
+		    	  
+	    	  	  if(parts[1].contentEquals("Close")) {
+	    	  		  break;
+		    	  }
 		      } 
 		      catch (Exception e) {
 		    	  e.printStackTrace();
 		      }
+	      }
+	      try {
+	    	  serverSocket.close();
+	      }
+	      catch(IOException e) {
+	    	  e.printStackTrace();
 	      }
 	}
 }
